@@ -1,25 +1,27 @@
-
+using System.Runtime.InteropServices;
 namespace SimpleAgentModel;
+
+using AgentType = ForestAgent;
 
 public class App
 {
     public static void Main(string[] args)
     {
-        var model = new Model<Agent>(30, 5);
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            AnsiHelper.Enable();
 
-        model.AgentGrid.Draw();
+        var agent = new AgentType();
 
-        model.AgentGrid.RandomizeGrid([0, 1, 2]);
+        var model = new Model<AgentType>(30, 5);
 
+        model.AgentGrid.RandomizeGrid(ForestAgent.PossibleStates);
         model.AgentGrid.Draw();
 
         while (true)
         {
-            model.AgentGrid.Update();
-
-            model.AgentGrid.Draw();
-
             Thread.Sleep(1000);
+            model.AgentGrid.Update();
+            model.AgentGrid.Draw();
         }
     }
 }

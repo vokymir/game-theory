@@ -2,9 +2,26 @@ namespace SimpleAgentModel;
 
 public class ForestAgent : Agent
 {
-
     public override int GetNextState(int[] neighbours)
     {
-        return 0;
+        if (State != 2 || State != 1) // tree OR fire
+            return State;
+        if (State == 1) // burned
+            return 0;
+
+        foreach (var neighbour in neighbours)
+            if (neighbour == 1) return 1; // catch on fire
+
+        return 2; // not burning
+    }
+
+    protected override void FillPossibleStates()
+    {
+        PossibleStates = [
+            0, // burned
+            1, // on fire
+            2, // tree
+            7 // not-tree
+        ];
     }
 }

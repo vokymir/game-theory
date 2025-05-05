@@ -79,7 +79,46 @@ public class Grid<TAgent> where TAgent : Agent, new()
         return neighbours;
     }
 
-    public void Draw()
+    public void Draw(bool useColors = true)
+    {
+        if (useColors)
+            DrawWithColors();
+        else
+            DrawWithNumbers();
+    }
+
+    public void DrawWithColors()
+    {
+        string output = "";
+
+        for (int y = 0; y < Agents.GetLength(1); y++)
+        {
+            for (int x = 0; x < Agents.GetLength(0); x++)
+            {
+                var agent = Agents[x, y];
+                string add;
+                if (agent is null)
+                {
+                    add = State2Color.Reset() + "X";
+                }
+                else
+                {
+                    add = State2Color.Background(agent.State) + " " + State2Color.Reset();
+                }
+
+                output += add;
+            }
+            if (y < Agents.GetLength(1) - 1)
+                output += "\n";
+        }
+
+        Console.Clear();
+        Console.CursorTop = 0;
+        Console.CursorLeft = 0;
+        Console.WriteLine(output);
+    }
+
+    public void DrawWithNumbers()
     {
         string output = "";
 
@@ -90,7 +129,9 @@ public class Grid<TAgent> where TAgent : Agent, new()
                 var agent = Agents[x, y];
                 output += (agent is not null ? agent.State : "-");
             }
-            output += "\n";
+
+            if (y < Agents.GetLength(1) - 1)
+                output += "\n";
         }
 
         Console.Clear();

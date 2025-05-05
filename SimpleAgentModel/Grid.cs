@@ -5,7 +5,7 @@ namespace SimpleAgentModel;
 /// Store grid of agents,
 /// show it in the console.
 /// </summary>
-public class Grid<TAgent> where TAgent : Agent
+public class Grid<TAgent> where TAgent : Agent, new()
 {
     public TAgent[,] Agents { get; set; }
     private Random _rnd = new Random();
@@ -22,6 +22,11 @@ public class Grid<TAgent> where TAgent : Agent
             for (int y = 0; y < Agents.GetLength(1); y++)
             {
                 var agent = Agents[x, y];
+                if (agent is null)
+                {
+                    agent = new TAgent();
+                    Agents[x, y] = agent;
+                }
                 agent.State = possibleStates[_rnd.Next(possibleStates.Length)];
             }
         }
@@ -55,15 +60,15 @@ public class Grid<TAgent> where TAgent : Agent
     {
         int[] neighbours = new int[9];
 
-        for (int i = -1; i < 2; i++)
+        for (int i = 0; i <= 2; i++)
         {
-            int currX = x + i;
+            int currX = x + i - 1;
             if (currX < 0 || currX >= Agents.GetLength(0))
                 continue;
 
-            for (int j = -1; j < 2; j++)
+            for (int j = 0; j <= 2; j++)
             {
-                int currY = y + j;
+                int currY = y + j - 1;
                 if (currY < 0 || currY >= Agents.GetLength(1))
                     continue;
 
@@ -76,6 +81,21 @@ public class Grid<TAgent> where TAgent : Agent
 
     public void Draw()
     {
+        string output = "";
 
+        for (int y = 0; y < Agents.GetLength(1); y++)
+        {
+            for (int x = 0; x < Agents.GetLength(0); x++)
+            {
+                var agent = Agents[x, y];
+                output += (agent is not null ? agent.State : "-");
+            }
+            output += "\n";
+        }
+
+        Console.Clear();
+        Console.CursorTop = 0;
+        Console.CursorLeft = 0;
+        Console.WriteLine(output);
     }
 }

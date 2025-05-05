@@ -6,7 +6,9 @@ namespace SimpleAgentModel;
 /// </summary>
 public class Agent
 {
-    public int State { get; set; }
+    public int State { get; set; } = 0;
+
+    public Agent() { }
 
     virtual public int GetNextState(int[] neighbours)
     {

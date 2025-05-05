@@ -6,7 +6,7 @@ namespace SimpleAgentModel;
 /// Have grid full of agents.
 /// Run the simulation.
 /// </summary>
-public class Model<TAgent> where TAgent : Agent
+public class Model<TAgent> where TAgent : Agent, new()
 {
     public Grid<TAgent> AgentGrid { get; set; }
 

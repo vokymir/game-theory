@@ -1,4 +1,5 @@
 0,1,2,7 // 0 = burned, 1 = on fire, 2 = tree, 7 = not-tree
+1,0,0,0
 5 // number of rules
 0 -> 0
 7 -> 7

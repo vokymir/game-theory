@@ -6,4 +6,5 @@ public interface IModelHistory
 
     public void StateChanged(int round, int before, int after);
 
+    public void PrintHistory();
 }

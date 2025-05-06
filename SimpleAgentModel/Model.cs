@@ -12,8 +12,6 @@ public class Model
     private Random _rnd = new Random();
     protected Agent ExemplarAgent = new();
     protected AgentLoader AgentGenerator;
-    public List<int> ChangesCountHistory { get; } = new();
-    public int LastChangesCount { get => ChangesCountHistory.LastOrDefault(-1); }
     public bool ShouldEnd { get; private set; } = false;
     public int Iteration { get; private set; } = 0;
     public int[] PossibleStates { get => ExemplarAgent.GetPossibleStates(); }
@@ -23,6 +21,7 @@ public class Model
     {
         AgentGenerator = new AgentLoader() { Path = path };
         Agents = new Agent[x, y];
+        ExemplarAgent = AgentGenerator.Create();
         History.Initialize(this);
     }
 
@@ -30,6 +29,8 @@ public class Model
     {
         AgentGenerator = new AgentLoader(t);
         Agents = new Agent[x, y];
+        ExemplarAgent = AgentGenerator.Create();
+        History.Initialize(this);
     }
 
     public void Randomize()
@@ -67,6 +68,7 @@ public class Model
                 int[] neighbours = GetNeighbours(x, y);
                 int nextState = orig.GetNextState(neighbours);
                 swap[x, y] = nextState;
+
                 History.StateChanged(Iteration, orig.State, nextState);
                 if (orig.State != nextState) changesCount++;
             }
@@ -74,7 +76,6 @@ public class Model
 
         if (changesCount == 0)
             ShouldEnd = true;
-        ChangesCountHistory.Add(changesCount);
 
         for (int x = 0; x < Agents.GetLength(0); x++)
         {
@@ -176,7 +177,7 @@ public class Model
 
     private void WriteInfo()
     {
-        string output = $"{State2Color.Background(0)}Iteration: {Iteration}\nChanges count: {LastChangesCount}";
+        string output = $"{State2Color.Background(0)}Iteration: {Iteration}";
 
         Console.WriteLine(output);
     }
@@ -186,7 +187,7 @@ public class Model
         string progress = "";
         for (int i = 0; i < Iteration - 1; i++)
         {
-            progress += $"{(i + 1).ToString("D" + (int)Math.Ceiling(Math.Log10(ChangesCountHistory.Count)))} - {ChangesCountHistory[i].ToString("D" + (int)Math.Ceiling(Math.Log10(Agents.Length)))}: {new string('x', Math.Max(0, (int)Math.Ceiling(Math.Log2(ChangesCountHistory[i]))))}\n";
+            // progress += $"{(i + 1).ToString("D" + (int)Math.Ceiling(Math.Log10(ChangesCountHistory.Count)))} - {ChangesCountHistory[i].ToString("D" + (int)Math.Ceiling(Math.Log10(Agents.Length)))}: {new string('x', Math.Max(0, (int)Math.Ceiling(Math.Log2(ChangesCountHistory[i]))))}\n";
         }
 
         string output = $@"

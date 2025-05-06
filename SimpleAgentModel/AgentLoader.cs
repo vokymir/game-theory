@@ -13,82 +13,96 @@ using Microsoft.CodeAnalysis.CSharp;
 public class AgentLoader
 {
     public string Path { get; init; } = string.Empty;
-    private Type? _agentType;
+    public Type? AgentType { get; private set; }
 
     public AgentLoader() { }
 
     public AgentLoader(Type t)
     {
         if (typeof(Agent).IsAssignableFrom(t))
-            _agentType = t;
+            AgentType = t;
         else
             throw new ApplicationException($"The type {t} is not inherited from class Agent.");
     }
 
     private string LoadClassSource()
     {
+        // ===== DECLARATIONS =====
         string spec;
-
-        try { spec = File.ReadAllText(Path); } catch { throw new ApplicationException($"The path {Path} is not valid."); }
-
-        string[] lines = spec.Split("\n");
-        string possibleStates = lines[0].Split("//")[0];
-        int nRules;
-        if (!int.TryParse(lines[1].Split("//")[0], out nRules))
-            throw new ApplicationException($"Error when loading agent: number of rules on line 2 isn't valid integer. \nLine 2: {lines[1]}");
         List<(int from, int to)> simpleRules = new();
         List<(bool isMin, int cut, int from, int to)> neighbourRules = new();
         string defaultRule = string.Empty;
+        string[] lines;
+        string possibleStates;
+        string statesProb;
+        int nRules;
+        // the known file structure
+        (string Comment, string RuleSimple, string RuleExtend, string RuleInside, string Section) Separator = ("//", "->", ":", " ", "\n");
+        (string NeighbourMIN, string NeighbourMAX, string Default) RuleType = ("min", "max", "default");
+        (int PossibleStates, int StatesProbabilities, int NumberOfRules, int Rules) Indexes = (0, 1, 2, 3);
+        (string File, string Program) DefaultStateRewrite = ("x", "State");
 
+        // ===== LOAD FILE =====
+        try { spec = File.ReadAllText(Path); } catch { throw new ApplicationException($"The path {Path} is not valid."); }
+        lines = spec.Split(Separator.Section);
+
+        // ===== GET ALL INFO FROM FILE =====
+        // STATES
+        possibleStates = lines[Indexes.PossibleStates].Split(Separator.Comment)[0];
+        statesProb = lines[Indexes.StatesProbabilities].Split(Separator.Comment)[0];
+        // RULES COUNT
+        if (!int.TryParse(lines[Indexes.NumberOfRules].Split(Separator.Comment)[0], out nRules))
+            throw new ApplicationException($"Error when loading agent: number of rules on line {Indexes.NumberOfRules} isn't valid integer. \nLine: {lines[Indexes.NumberOfRules]}");
+        // RULES
         for (int i = 0; i < nRules; i++)
         {
-            string line = lines[2 + i].Split("//")[0].ToLower();
-            string[] split = line.Split("->");
-            if (int.TryParse(split[0], out int left))
+            int left, right, cut;
+            string line = lines[Indexes.Rules + i].Split(Separator.Comment)[0].ToLower();
+            string[] split = line.Split(Separator.RuleSimple);
+
+            if (int.TryParse(split[0], out left))
             {
-                int.TryParse(split[1], out int right);
+                int.TryParse(split[1], out right);
                 simpleRules.Add((left, right));
             }
-            else if (line.StartsWith("default"))
+            else if (line.StartsWith(RuleType.Default))
             {
-                defaultRule = split[1].Replace("x", "State");
+                defaultRule = split[1].Replace(DefaultStateRewrite.File, DefaultStateRewrite.Program);
             }
-            else if (line.StartsWith("min") || line.StartsWith("max"))
+            else if (line.StartsWith(RuleType.NeighbourMIN) || line.StartsWith(RuleType.NeighbourMAX))
             {
-                if (!int.TryParse(line.Split(":")[0].Split(" ")[1], out int cut))
-                    throw new ApplicationException($"Error when loading agent on line {2 + i + 1}: cannot find number before ':'. Make sure it has a space before.");
-                if (!int.TryParse(split[0].Split(":")[1], out left))
-                    throw new ApplicationException($"Error when loading agent on line {2 + i + 1}: cannot find number after ':' and before '->'.");
-                if (!int.TryParse(split[1], out int right))
-                    throw new ApplicationException($"Error when loading agent on line {2 + i + 1}: cannot find number after '->'.");
+                if (!int.TryParse(line.Split(Separator.RuleExtend)[0].Split(Separator.RuleInside)[1], out cut))
+                    throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: cannot find number before '{Separator.RuleExtend}'. Make sure it has a '{Separator.RuleInside}' before.");
+                if (!int.TryParse(split[0].Split(Separator.RuleExtend)[1], out left))
+                    throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: cannot find number after '{Separator.RuleExtend}' and before '{Separator.RuleSimple}'.");
+                if (!int.TryParse(split[1], out right))
+                    throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: cannot find number after '{Separator.RuleSimple}'.");
 
-                neighbourRules.Add((line.StartsWith("min"), cut, left, right));
+                neighbourRules.Add((line.StartsWith(RuleType.NeighbourMIN), cut, left, right));
             }
             else
-                throw new ApplicationException($"Error when loading agent on line {2 + i + 1}: unknown line start.");
+                throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: unknown line start.");
         }
 
         if (defaultRule == string.Empty)
             throw new ApplicationException($"Error when loading agent: doesn't have default case.");
 
-        // Build the rule bodies
+        // ===== STRING BUILDING =====
         var simpleRulesBuilder = new StringBuilder();
         foreach (var rule in simpleRules)
-            simpleRulesBuilder.AppendLine($"            if (State == {rule.from}) {{ return {rule.to}; }}");
+            simpleRulesBuilder.AppendLine($"if (State == {rule.from}) {{ return {rule.to}; }}");
 
         var neighbourRulesBuilder = new StringBuilder();
         if (neighbourRules.Count > 0)
         {
-            neighbourRulesBuilder.AppendLine("            var counts = neighbours");
-            neighbourRulesBuilder.AppendLine("                .GroupBy(x => x)");
-            neighbourRulesBuilder.AppendLine("                .ToDictionary(g => g.Key, g => g.Count());");
+            neighbourRulesBuilder.AppendLine("var counts = neighbours.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());");
             foreach (var rule in neighbourRules)
                 neighbourRulesBuilder.AppendLine(
-                    $"            if (counts.ContainsKey({rule.from}) && counts[{rule.from}] {(rule.isMin ? ">=" : "<=")} {rule.cut}) {{ return {rule.to}; }}");
+                    $"if (counts.ContainsKey({rule.from}) && counts[{rule.from}] {(rule.isMin ? ">=" : "<=")} {rule.cut}) {{ return {rule.to}; }}");
         }
 
-        // Now inject into the template
-        string classSource = $@"
+        // ===== PUTTING IT TOGETHER =====
+        return $@"
 using System;
 using System.Collections.Generic;
 using System.Linq;               // needed for GroupBy/ToDictionary
@@ -113,7 +127,6 @@ namespace SimpleAgentModel
         }}
     }}
 }}";
-        return classSource;
     }
 
     private void Load()
@@ -161,16 +174,16 @@ namespace SimpleAgentModel
         // 3) Load the Type
         ms.Seek(0, SeekOrigin.Begin);
         var asm = Assembly.Load(ms.ToArray());
-        _agentType = asm.GetType("SimpleAgentModel.GeneratedAgent")
+        AgentType = asm.GetType("SimpleAgentModel.GeneratedAgent")
             ?? throw new InvalidOperationException("Type SimpleAgentModel.GeneratedAgent not found");
     }
 
     public Agent Create()
     {
-        if (_agentType is null)
+        if (AgentType is null)
             Load();
 
-        return (Agent)(Activator.CreateInstance(_agentType!)
-            ?? throw new ApplicationException($"Cannot instantiate agent {_agentType}."));
+        return (Agent)(Activator.CreateInstance(AgentType!)
+            ?? throw new ApplicationException($"Cannot instantiate agent {AgentType}."));
     }
 }

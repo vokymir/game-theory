@@ -11,7 +11,11 @@ public class App
         var data = ParseArgs(args);
 
         if (!data.MultipleRun)
-            RunModel(data.X, data.Y, data.Path, true);
+        {
+            var model = RunModel(data.X, data.Y, data.Path, true);
+            model.WriteAllModelInfo();
+            model.History.PrintHistory();
+        }
     }
 
     public static (int X, int Y, string Path, bool MultipleRun, int RunsCount) ParseArgs(string[] args)
@@ -32,7 +36,7 @@ public class App
         return (x, y, path, multiple, runsCount);
     }
 
-    public static void RunModel(int x, int y, string path, bool shouldDraw)
+    public static Model RunModel(int x, int y, string path, bool shouldDraw)
     {
         bool wait = true;
         var model = new Model(x, y, path);
@@ -55,6 +59,6 @@ public class App
                 model.Draw();
         }
 
-        model.WriteAllModelInfo();
+        return model;
     }
 }

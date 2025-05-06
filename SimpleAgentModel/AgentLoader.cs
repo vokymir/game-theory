@@ -30,7 +30,7 @@ public class AgentLoader
         // ===== DECLARATIONS =====
         string spec;
         List<(int from, int to)> simpleRules = new();
-        List<(bool isMin, int cut, int from, int to)> neighbourRules = new();
+        List<(bool isMin, int cut, int neigh, int from, int to)> neighbourRules = new();
         string defaultRule = string.Empty;
         string[] lines;
         string possibleStates;
@@ -49,14 +49,14 @@ public class AgentLoader
         // ===== GET ALL INFO FROM FILE =====
         // STATES
         possibleStates = lines[Indexes.PossibleStates].Split(Separator.Comment)[0];
-        statesProb = lines[Indexes.StatesProbabilities].Split(Separator.Comment)[0].Replace(",", "f,") + "f";
+        statesProb = lines[Indexes.StatesProbabilities].Split(Separator.Comment)[0].Replace(",", "f,").TrimEnd() + "f";
         // RULES COUNT
         if (!int.TryParse(lines[Indexes.NumberOfRules].Split(Separator.Comment)[0], out nRules))
             throw new ApplicationException($"Error when loading agent: number of rules on line {Indexes.NumberOfRules} isn't valid integer. \nLine: {lines[Indexes.NumberOfRules]}");
         // RULES
         for (int i = 0; i < nRules; i++)
         {
-            int left, right, cut;
+            int left, right, cut, neigh;
             string line = lines[Indexes.Rules + i].Split(Separator.Comment)[0].ToLower();
             string[] split = line.Split(Separator.RuleSimple);
 
@@ -73,12 +73,14 @@ public class AgentLoader
             {
                 if (!int.TryParse(line.Split(Separator.RuleExtend)[0].Split(Separator.RuleInside)[1], out cut))
                     throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: cannot find number before '{Separator.RuleExtend}'. Make sure it has a '{Separator.RuleInside}' before.");
-                if (!int.TryParse(split[0].Split(Separator.RuleExtend)[1], out left))
+                if (!int.TryParse(line.Split(Separator.RuleExtend)[1], out neigh))
+                    throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: cannot find number in between '{Separator.RuleExtend}'.");
+                if (!int.TryParse(split[0].Split(Separator.RuleExtend)[2], out left))
                     throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: cannot find number after '{Separator.RuleExtend}' and before '{Separator.RuleSimple}'.");
                 if (!int.TryParse(split[1], out right))
                     throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: cannot find number after '{Separator.RuleSimple}'.");
 
-                neighbourRules.Add((line.StartsWith(RuleType.NeighbourMIN), cut, left, right));
+                neighbourRules.Add((line.StartsWith(RuleType.NeighbourMIN), cut, neigh, left, right));
             }
             else
                 throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: unknown line start.");
@@ -95,10 +97,10 @@ public class AgentLoader
         var neighbourRulesBuilder = new StringBuilder();
         if (neighbourRules.Count > 0)
         {
-            neighbourRulesBuilder.AppendLine("var counts = neighbours.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());");
+            neighbourRulesBuilder.AppendLine("neighbours[4] = -420; var counts = neighbours.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());");
             foreach (var rule in neighbourRules)
                 neighbourRulesBuilder.AppendLine(
-                    $"if (counts.ContainsKey({rule.from}) && counts[{rule.from}] {(rule.isMin ? ">=" : "<=")} {rule.cut}) {{ return {rule.to}; }}");
+                    $"if (State == {rule.from} && counts.ContainsKey({rule.neigh}) && counts[{rule.neigh}] {(rule.isMin ? ">=" : "<=")} {rule.cut}) {{ return {rule.to}; }}");
         }
 
         // ===== PUTTING IT TOGETHER =====

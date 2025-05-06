@@ -1,8 +1,8 @@
 0,1,2,7 // 0 = burned, 1 = on fire, 2 = tree, 7 = not-tree
-0,0,0.8,0.2
+0,0,0.6,0.4
 5 // number of rules
 0 -> 0
 7 -> 7
 1 -> 0
-min 1: 1 -> 1
+min 1 : 1 : 2 -> 1 // if at least 1 of type 1, then if this is 2, it becomes 1
 default: x -> x

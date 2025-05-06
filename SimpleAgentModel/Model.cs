@@ -10,17 +10,20 @@ public class Model
 {
     public Agent[,] Agents { get; set; }
     private Random _rnd = new Random();
-    protected Agent ExemplarAgene = new();
+    protected Agent ExemplarAgent = new();
     protected AgentLoader AgentGenerator;
     public List<int> ChangesCountHistory { get; } = new();
     public int LastChangesCount { get => ChangesCountHistory.LastOrDefault(-1); }
     public bool ShouldEnd { get; private set; } = false;
     public int Iteration { get; private set; } = 0;
+    public int[] PossibleStates { get => ExemplarAgent.GetPossibleStates(); }
+    public IModelHistory History = new ModelHistory();
 
     public Model(int x, int y, string path)
     {
         AgentGenerator = new AgentLoader() { Path = path };
         Agents = new Agent[x, y];
+        History.Initialize(this);
     }
 
     public Model(int x, int y, Type t)
@@ -44,6 +47,8 @@ public class Model
                     Agents[x, y] = agent;
                 }
                 agent.State = possibleStates[_rnd.Next(possibleStates.Length)];
+
+                History.StateChanged(Iteration, -1, agent.State);
             }
         }
     }
@@ -62,6 +67,7 @@ public class Model
                 int[] neighbours = GetNeighbours(x, y);
                 int nextState = orig.GetNextState(neighbours);
                 swap[x, y] = nextState;
+                History.StateChanged(Iteration, orig.State, nextState);
                 if (orig.State != nextState) changesCount++;
             }
         }

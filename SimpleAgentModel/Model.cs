@@ -206,7 +206,7 @@ public class Model
         var counts = CountAgentsByState();
         var build = new StringBuilder();
         foreach (int state in PossibleStates)
-            build.AppendLine($"{State2Color.Background(state)}State {state}{State2Color.Reset()}\t{counts[state]}");
+            build.AppendLine($"{State2Color.Background(state)}State{State2Color.Reset()} {state}\t{counts[state]}");
 
         string output = $@"
 Dimensions: {Agents.GetLength(0)}x{Agents.GetLength(1)}

@@ -7,7 +7,7 @@ namespace SimpleAgentModel;
 public class Agent
 {
     public int State { get; set; } = 0;
-    public static int[] PossibleStates { get; protected set; }
+    public static int[] PossibleStates { get; protected set; } = Array.Empty<int>();
 
     public Agent() { FillPossibleStates(); }
 

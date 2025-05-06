@@ -1,8 +1,6 @@
 using System.Runtime.InteropServices;
 namespace SimpleAgentModel;
 
-using AgentType = ForestAgent;
-
 public class App
 {
     public static void Main(string[] args)
@@ -10,18 +8,17 @@ public class App
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             AnsiHelper.Enable();
 
-        var agent = new AgentType();
 
-        var model = new Model<AgentType>(30, 5);
+        var model = new Model(30, 5, "./Agents/Forest.agent");
 
-        model.AgentGrid.RandomizeGrid(ForestAgent.PossibleStates);
-        model.AgentGrid.Draw();
+        model.RandomizeGrid(ForestAgent.PossibleStates);
+        model.Draw();
 
         while (true)
         {
             Thread.Sleep(1000);
-            model.AgentGrid.Update();
-            model.AgentGrid.Draw();
+            model.Update();
+            model.Draw();
         }
     }
 }

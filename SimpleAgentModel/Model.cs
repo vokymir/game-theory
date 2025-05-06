@@ -35,7 +35,7 @@ public class Model
 
     public void Randomize()
     {
-        int[] possibleStates = AgentGenerator.Create().GetPossibleStates();
+        int[] possibleStates = ExemplarAgent.GetPossibleStates();
 
         for (int x = 0; x < Agents.GetLength(0); x++)
         {
@@ -47,10 +47,29 @@ public class Model
                     agent = AgentGenerator.Create();
                     Agents[x, y] = agent;
                 }
-                agent.State = possibleStates[_rnd.Next(possibleStates.Length)];
+                agent.State = agent.Probability2State(_rnd.NextSingle());
 
                 History.StateChanged(Iteration, -1, agent.State);
             }
+        }
+    }
+
+    public void StartLine(int NESW, int state)
+    {
+        int x = 0;
+        int y = 0;
+
+        if (NESW == 0 || NESW == 2)
+        {
+            y = NESW == 0 ? 0 : Agents.GetLength(1) - 1;
+            for (x = 0; x < Agents.GetLength(0); x++)
+                Agents[x, y].State = state;
+        }
+        else
+        {
+            x = NESW == 1 ? Agents.GetLength(0) - 1 : 0;
+            for (y = 0; y < Agents.GetLength(1); y++)
+                Agents[x, y].State = state;
         }
     }
 
@@ -184,16 +203,8 @@ public class Model
 
     public void WriteAllModelInfo()
     {
-        string progress = "";
-        for (int i = 0; i < Iteration - 1; i++)
-        {
-            // progress += $"{(i + 1).ToString("D" + (int)Math.Ceiling(Math.Log10(ChangesCountHistory.Count)))} - {ChangesCountHistory[i].ToString("D" + (int)Math.Ceiling(Math.Log10(Agents.Length)))}: {new string('x', Math.Max(0, (int)Math.Ceiling(Math.Log2(ChangesCountHistory[i]))))}\n";
-        }
-
         string output = $@"
 Dimensions: {Agents.GetLength(0)}x{Agents.GetLength(1)}
-Graph of changes over time:
-{progress}
             ";
         Console.WriteLine(output);
     }

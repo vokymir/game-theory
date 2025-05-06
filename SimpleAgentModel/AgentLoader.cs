@@ -49,7 +49,7 @@ public class AgentLoader
         // ===== GET ALL INFO FROM FILE =====
         // STATES
         possibleStates = lines[Indexes.PossibleStates].Split(Separator.Comment)[0];
-        statesProb = lines[Indexes.StatesProbabilities].Split(Separator.Comment)[0];
+        statesProb = lines[Indexes.StatesProbabilities].Split(Separator.Comment)[0].Replace(",", "f,") + "f";
         // RULES COUNT
         if (!int.TryParse(lines[Indexes.NumberOfRules].Split(Separator.Comment)[0], out nRules))
             throw new ApplicationException($"Error when loading agent: number of rules on line {Indexes.NumberOfRules} isn't valid integer. \nLine: {lines[Indexes.NumberOfRules]}");
@@ -123,6 +123,10 @@ namespace SimpleAgentModel
             PossibleStates = new int[]
             {{
                 {possibleStates}
+            }};
+            StatesProbabilities = new float[]
+            {{
+                {statesProb}
             }};
         }}
     }}

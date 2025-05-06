@@ -4,7 +4,7 @@ public class ForestAgent : Agent
 {
     public override int GetNextState(int[] neighbours)
     {
-        if (State != 2 || State != 1) // tree OR fire
+        if (State != 2 && State != 1) // tree OR fire
             return State;
         if (State == 1) // burned
             return 0;

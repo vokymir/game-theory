@@ -67,6 +67,12 @@ public class ModelHistory : IModelHistory
         }
     }
 
+    public int[] ChangesCount()
+    {
+        CountChanges();
+        return _changesCount;
+    }
+
     private void CountChanges()
     {
         _changesCount = new int[_history.Count];

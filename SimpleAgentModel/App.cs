@@ -15,7 +15,7 @@ public class App
 
         if (data.MultipleRun)
         {
-
+            RunModels(data);
         }
         else
         {
@@ -37,9 +37,9 @@ Available parameters:
     y           Int, setup map Y dimension.
     path        String, path where find the agent.
 
-    mult        Bool, wheter to run multiple simulations. [NOT IMPLEMENTED]
+    mult        Bool, wheter to run multiple simulations.
                 Default: false
-    multCount   Int, how many simulations. [NOT IMPLEMENTED]
+    multCount   Int, how many simulations.
     multLimit   Int, if the simulation is longer than limit, it will be ended. Any negative number and zero means unlimited.
 
     draw        Bool, if should draw the visualisation of the map.
@@ -143,12 +143,33 @@ Available parameters:
         return res;
     }
 
+    public static void RunModels(ArgsInfo data)
+    {
+        ModelRunInfo[] infos = new ModelRunInfo[data.RunsCount];
+
+        ArgsInfo runData = data;
+        runData.Draw = false;
+        if (runData.MultipleRunsLimit <= 0)
+            runData.MultipleRunsLimit = 1000;
+
+        for (int i = 0; i < data.RunsCount; i++)
+        {
+            var model = RunModel(runData);
+            infos[i] = model.GetAllModelInfo();
+
+            Console.CursorLeft = 0;
+            if (i > 0)
+                Console.CursorTop = Console.CursorTop - 1;
+            Console.WriteLine($"Processing {i + 1}/{data.RunsCount} simulations.");
+        }
+    }
+
     public static Model RunModel(ArgsInfo data)
     {
         var model = new Model(data.X, data.Y, data.Path);
         int skipIterations = 0;
-
-        Console.WriteLine(@"
+        if (data.Draw)
+            Console.WriteLine(@"
 Hit enter to continue to the next iteration.
 Instead write 's<int>' to skip <int> iterations.
 ");
@@ -156,8 +177,9 @@ Instead write 's<int>' to skip <int> iterations.
         model.Randomize();
         if (data.StartLine)
             model.StartLine(data.NESW, data.State);
+        if (data.Draw)
+            model.Draw();
 
-        model.Draw();
         string? inp;
 
         while (!model.ShouldEnd)

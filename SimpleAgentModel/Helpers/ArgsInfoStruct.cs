@@ -10,6 +10,7 @@ public struct ArgsInfo
     public int NESW { get; set; }
     public int State { get; set; }
     public bool MultipleRun { get; set; }
+    public int MultipleRunsLimit { get; set; }
     public int RunsCount { get; set; }
     public bool Draw { get; set; }
     public bool DrawColors { get; set; }

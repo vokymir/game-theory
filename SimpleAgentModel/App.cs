@@ -40,6 +40,7 @@ Available parameters:
     mult        Bool, wheter to run multiple simulations. [NOT IMPLEMENTED]
                 Default: false
     multCount   Int, how many simulations. [NOT IMPLEMENTED]
+    multLimit   Int, if the simulation is longer than limit, it will be ended. Any negative number and zero means unlimited.
 
     draw        Bool, if should draw the visualisation of the map.
                 Default: true
@@ -110,6 +111,10 @@ Available parameters:
                     int.TryParse(arg[1], out int runcount);
                     res.RunsCount = runcount;
                     break;
+                case "multlimit":
+                    int.TryParse(arg[1], out int multlimit);
+                    res.MultipleRunsLimit = multlimit;
+                    break;
                 case "draw":
                     bool.TryParse(arg[1], out bool draw);
                     res.Draw = draw;
@@ -140,32 +145,38 @@ Available parameters:
 
     public static Model RunModel(ArgsInfo data)
     {
-        bool wait = true;
         var model = new Model(data.X, data.Y, data.Path);
+        int skipIterations = 0;
 
         Console.WriteLine(@"
 Hit enter to continue to the next iteration.
-Instead write 's' to skip iterations to the end.
+Instead write 's<int>' to skip <int> iterations.
 ");
 
         model.Randomize();
         if (data.StartLine)
             model.StartLine(data.NESW, data.State);
+
         model.Draw();
         string? inp;
 
         while (!model.ShouldEnd)
         {
-            if (wait && data.Draw)
+            if (data.Draw && skipIterations <= 0)
             {
                 inp = Console.ReadLine();
                 if (inp is not null && inp.StartsWith("s"))
-                    wait = false;
+                {
+                    int.TryParse(inp.Substring(1), out int count);
+                    skipIterations = count;
+                }
             }
 
             model.Update();
             if (data.Draw)
                 model.Draw(data.DrawColors, !data.DrawOver);
+
+            skipIterations--;
         }
 
         return model;

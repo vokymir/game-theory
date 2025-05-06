@@ -1,8 +1,6 @@
 0,1,2,7 // 0 = burned, 1 = on fire, 2 = tree, 7 = not-tree
 0,0,0.6,0.4
-5 // number of rules
-0 -> 0
-7 -> 7
-1 -> 0
-min 1 : 1 : 2 -> 1 // if at least 1 of type 1, then if this is 2, it becomes 1
+3 // number of rules
+1 -> 0 // if was on fire, now is just black dust
+min 1 : 1 : 2 -> 1 // if at least 1 of type 1 (fire), then if this is 2 (tree), it becomes 1 (fire)
 default: x -> x

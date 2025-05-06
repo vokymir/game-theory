@@ -12,6 +12,10 @@ public class Model
     private Random _rnd = new Random();
     protected Agent ExemplarAgene = new();
     protected AgentLoader AgentGenerator;
+    public List<int> ChangesCountHistory { get; } = new();
+    public int LastChangesCount { get => ChangesCountHistory.LastOrDefault(-1); }
+    public bool ShouldEnd { get; private set; } = false;
+    public int Iteration { get; private set; } = 0;
 
     public Model(int x, int y, string path)
     {
@@ -47,6 +51,8 @@ public class Model
     public void Update()
     {
         int[,] swap = new int[Agents.GetLength(0), Agents.GetLength(1)];
+        int changesCount = 0;
+        Iteration += 1;
 
         for (int x = 0; x < Agents.GetLength(0); x++)
         {
@@ -56,8 +62,13 @@ public class Model
                 int[] neighbours = GetNeighbours(x, y);
                 int nextState = orig.GetNextState(neighbours);
                 swap[x, y] = nextState;
+                if (orig.State != nextState) changesCount++;
             }
         }
+
+        if (changesCount == 0)
+            ShouldEnd = true;
+        ChangesCountHistory.Add(changesCount);
 
         for (int x = 0; x < Agents.GetLength(0); x++)
         {
@@ -91,15 +102,18 @@ public class Model
         return neighbours;
     }
 
-    public void Draw(bool useColors = true)
+    public void Draw(bool useColors = true, bool seeHistory = true)
     {
-        if (useColors)
-            DrawWithColors();
-        else
-            DrawWithNumbers();
+        if (useColors) DrawWithColors(seeHistory);
+        else DrawWithNumbers(seeHistory);
+
+        WriteInfo();
+
+        if (seeHistory)
+            Console.WriteLine("-----");
     }
 
-    private void DrawWithColors()
+    private void DrawWithColors(bool seeHistory)
     {
         string output = "";
 
@@ -110,13 +124,9 @@ public class Model
                 var agent = Agents[x, y];
                 string add;
                 if (agent is null)
-                {
                     add = State2Color.Reset() + "XX";
-                }
                 else
-                {
                     add = State2Color.Background(agent.State) + "  " + State2Color.Reset();
-                }
 
                 output += add;
             }
@@ -124,13 +134,16 @@ public class Model
                 output += "\n";
         }
 
-        Console.Clear();
-        Console.CursorTop = 0;
-        Console.CursorLeft = 0;
+        if (!seeHistory)
+        {
+            Console.Clear();
+            Console.CursorTop = 0;
+            Console.CursorLeft = 0;
+        }
         Console.WriteLine(output);
     }
 
-    private void DrawWithNumbers()
+    private void DrawWithNumbers(bool seeHistory)
     {
         string output = "";
 
@@ -146,9 +159,35 @@ public class Model
                 output += "\n";
         }
 
-        Console.Clear();
-        Console.CursorTop = 0;
-        Console.CursorLeft = 0;
+        if (!seeHistory)
+        {
+            Console.Clear();
+            Console.CursorTop = 0;
+            Console.CursorLeft = 0;
+        }
+        Console.WriteLine(output);
+    }
+
+    private void WriteInfo()
+    {
+        string output = $"{State2Color.Background(0)}Iteration: {Iteration}\nChanges count: {LastChangesCount}";
+
+        Console.WriteLine(output);
+    }
+
+    public void WriteAllModelInfo()
+    {
+        string progress = "";
+        for (int i = 0; i < Iteration - 1; i++)
+        {
+            progress += $"{(i + 1).ToString("D" + (int)Math.Ceiling(Math.Log10(ChangesCountHistory.Count)))} - {ChangesCountHistory[i].ToString("D" + (int)Math.Ceiling(Math.Log10(Agents.Length)))}: {new string('x', Math.Max(0, (int)Math.Ceiling(Math.Log2(ChangesCountHistory[i]))))}\n";
+        }
+
+        string output = $@"
+Dimensions: {Agents.GetLength(0)}x{Agents.GetLength(1)}
+Graph of changes over time:
+{progress}
+            ";
         Console.WriteLine(output);
     }
 }

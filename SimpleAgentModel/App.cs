@@ -8,17 +8,18 @@ public class App
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             AnsiHelper.Enable();
 
-
         var model = new Model(50, 15, "./Agents/Forest.agent");
 
         model.Randomize();
         model.Draw();
 
-        while (true)
+        while (!model.ShouldEnd)
         {
-            Thread.Sleep(1000);
+            Thread.Sleep(500);
             model.Update();
             model.Draw();
         }
+
+        model.WriteAllModelInfo();
     }
 }

@@ -46,16 +46,12 @@ Example:
 
 Available parameters:
     x           Int, setup map X dimension.
-                Default: 30
     y           Int, setup map Y dimension.
-                Default: 12
     path        String, path where find the agent.
-                Default: ./Agents/Forest.agent
 
     mult        Bool, wheter to run multiple simulations. [NOT IMPLEMENTED]
                 Default: false
     multCount   Int, how many simulations. [NOT IMPLEMENTED]
-                Default: 0
 
     draw        Bool, if should draw the visualisation of the map.
                 Default: true
@@ -65,18 +61,16 @@ Available parameters:
                 Default: false
 
     line        Bool, wheter to create a line of the same states on one edge of map.
-                Default: true
+                Default: false
     lineDir     Int, 0 = North, 1 = East, 2 = South, 3 = West. On which edge is the line.
-                Default: 2
     lineState   Int, which state the line should be at.
-                Default: 1
             ";
         Console.WriteLine(output);
     }
 
     public static ArgsInfo ParseArgs(string[] args)
     {
-        ArgsInfo res = new() { X = 30, Y = 12, Path = "./Agents/Forest.agent", StartLine = true, NESW = 2, State = 1, Draw = true, DrawColors = true, DrawOver = false, ShouldContinue = true };
+        ArgsInfo res = new() { MultipleRun = false, StartLine = false, Draw = true, DrawColors = true, DrawOver = false, ShouldContinue = true };
 
         if (args.Length <= 0)
             args = ["h"];

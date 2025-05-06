@@ -1,4 +1,4 @@
-
+using System.Text;
 namespace SimpleAgentModel;
 
 /// <summary>
@@ -203,9 +203,38 @@ public class Model
 
     public void WriteAllModelInfo()
     {
+        var counts = CountAgentsByState();
+        var build = new StringBuilder();
+        foreach (int state in PossibleStates)
+            build.AppendLine($"{State2Color.Background(state)}State {state}{State2Color.Reset()}\t{counts[state]}");
+
         string output = $@"
 Dimensions: {Agents.GetLength(0)}x{Agents.GetLength(1)}
-            ";
+Agent counts at the end:
+{build.ToString()}";
         Console.WriteLine(output);
+    }
+
+    private Dictionary<int, int> CountAgentsByState()
+    {
+        var counts = new Dictionary<int, int>();
+
+        foreach (var state in PossibleStates)
+            counts[state] = 0;
+
+        for (int x = 0; x < Agents.GetLength(0); x++)
+        {
+            for (int y = 0; y < Agents.GetLength(1); y++)
+            {
+                var agent = Agents[x, y];
+                if (agent == null)
+                    continue;
+
+                int st = agent.State;
+                counts[st]++;
+            }
+        }
+
+        return counts;
     }
 }

@@ -3,6 +3,7 @@ namespace SimpleAgentModel;
 
 public struct ArgsInfo
 {
+    public bool ShouldContinue { get; set; }
     public int X { get; set; }
     public int Y { get; set; }
     public string Path { get; set; }
@@ -12,6 +13,8 @@ public struct ArgsInfo
     public bool MultipleRun { get; set; }
     public int RunsCount { get; set; }
     public bool Draw { get; set; }
+    public bool DrawColors { get; set; }
+    public bool DrawOver { get; set; }
 }
 
 public class App
@@ -23,6 +26,9 @@ public class App
 
         ArgsInfo data = ParseArgs(args);
 
+        if (!data.ShouldContinue)
+            return;
+
         if (!data.MultipleRun)
         {
             var model = RunModel(data);
@@ -31,9 +37,49 @@ public class App
         }
     }
 
+    public static void PrintHelp()
+    {
+        string output = @"
+To use this program, give it parameters divided by spaces, in the form of <name>:<value>.
+Example:
+    dotnet run x:20 y:10 path:./Agents/Forest.agent
+
+Available parameters:
+    x           Int, setup map X dimension.
+                Default: 30
+    y           Int, setup map Y dimension.
+                Default: 12
+    path        String, path where find the agent.
+                Default: ./Agents/Forest.agent
+
+    mult        Bool, wheter to run multiple simulations. [NOT IMPLEMENTED]
+                Default: false
+    multCount   Int, how many simulations. [NOT IMPLEMENTED]
+                Default: 0
+
+    draw        Bool, if should draw the visualisation of the map.
+                Default: true
+    drawColors  Bool, if should use colors instead of state numbers when drawing.
+                Default: true
+    drawOver    Bool, if should draw each iteration of map in the same place, drawing over the old map.
+                Default: false
+
+    line        Bool, wheter to create a line of the same states on one edge of map.
+                Default: true
+    lineDir     Int, 0 = North, 1 = East, 2 = South, 3 = West. On which edge is the line.
+                Default: 2
+    lineState   Int, which state the line should be at.
+                Default: 1
+            ";
+        Console.WriteLine(output);
+    }
+
     public static ArgsInfo ParseArgs(string[] args)
     {
-        ArgsInfo res = new() { Draw = true };
+        ArgsInfo res = new() { X = 30, Y = 12, Path = "./Agents/Forest.agent", StartLine = true, NESW = 2, State = 1, Draw = true, DrawColors = true, DrawOver = false, ShouldContinue = true };
+
+        if (args.Length <= 0)
+            args = ["h"];
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -42,6 +88,13 @@ public class App
 
             switch (arg[0].ToLower())
             {
+                case "help":
+                case "-h":
+                case "h":
+                case "--help":
+                    PrintHelp();
+                    res.ShouldContinue = false;
+                    return res;
                 case "x":
                     int.TryParse(arg[1], out int x);
                     res.X = x;
@@ -79,8 +132,16 @@ public class App
                     bool.TryParse(arg[1], out bool draw);
                     res.Draw = draw;
                     break;
+                case "drawcolors":
+                    bool.TryParse(arg[1], out bool drclrs);
+                    res.DrawColors = drclrs;
+                    break;
+                case "drawover":
+                    bool.TryParse(arg[1], out bool drover);
+                    res.DrawOver = drover;
+                    break;
                 default:
-                    Console.WriteLine($"Unknown argument: {argLine}");
+                    Console.WriteLine($"Unknown argument: {argLine}\nTo see all available arguments, do: dotnet run --help");
                     break;
             }
         }
@@ -100,6 +161,11 @@ public class App
         bool wait = true;
         var model = new Model(data.X, data.Y, data.Path);
 
+        Console.WriteLine(@"
+Hit enter to continue to the next iteration.
+Instead write 's' to skip iterations to the end.
+");
+
         model.Randomize();
         if (data.StartLine)
             model.StartLine(data.NESW, data.State);
@@ -111,13 +177,13 @@ public class App
             if (wait && data.Draw)
             {
                 inp = Console.ReadLine();
-                if (inp is not null && inp.StartsWith("c"))
+                if (inp is not null && inp.StartsWith("s"))
                     wait = false;
             }
 
             model.Update();
             if (data.Draw)
-                model.Draw();
+                model.Draw(data.DrawColors, !data.DrawOver);
         }
 
         return model;

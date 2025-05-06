@@ -1,0 +1,9 @@
+0,7 // black, dead = 0; white, alive = 7
+0.95, 0.05
+6
+max 1: 7 : 7 -> 0   // any alive cell with less than 2 neighbours die
+min 4: 7 : 7 -> 0   // any alive cell with more than 3 neighbours die
+is 3: 7 : 0 -> 7    // any dead cell with exactly 3 neighbours will live
+is 2: 7 : 7 -> 7    // any alive cell with 2-3 neighbours will live
+is 3: 7 : 7 -> 7
+default: x -> 0     // any dead cell will remain dead

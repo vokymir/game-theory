@@ -6,6 +6,13 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
+public enum Rule
+{
+    IsExact,
+    AtLeast,
+    AtMost
+}
+
 /// <summary>
 /// Loads Agent from file.
 /// Creates new instances of that agent.
@@ -30,7 +37,7 @@ public class AgentLoader
         // ===== DECLARATIONS =====
         string spec;
         List<(int from, int to)> simpleRules = new();
-        List<(bool isMin, int cut, int neigh, int from, int to)> neighbourRules = new();
+        List<(Rule rule, int cut, int neigh, int from, int to)> neighbourRules = new();
         string defaultRule = string.Empty;
         string[] lines;
         string possibleStates;
@@ -38,7 +45,7 @@ public class AgentLoader
         int nRules;
         // the known file structure
         (string Comment, string RuleSimple, string RuleExtend, string RuleInside, string Section) Separator = ("//", "->", ":", " ", "\n");
-        (string NeighbourMIN, string NeighbourMAX, string Default) RuleType = ("min", "max", "default");
+        (string NeighbourMIN, string NeighbourMAX, string NeighbourIS, string Default) RuleType = ("min", "max", "is", "default");
         (int PossibleStates, int StatesProbabilities, int NumberOfRules, int Rules) Indexes = (0, 1, 2, 3);
         (string File, string Program) DefaultStateRewrite = ("x", "State");
 
@@ -69,7 +76,7 @@ public class AgentLoader
             {
                 defaultRule = split[1].Replace(DefaultStateRewrite.File, DefaultStateRewrite.Program);
             }
-            else if (line.StartsWith(RuleType.NeighbourMIN) || line.StartsWith(RuleType.NeighbourMAX))
+            else if (line.StartsWith(RuleType.NeighbourMIN) || line.StartsWith(RuleType.NeighbourMAX) || line.StartsWith(RuleType.NeighbourIS))
             {
                 if (!int.TryParse(line.Split(Separator.RuleExtend)[0].Split(Separator.RuleInside)[1], out cut))
                     throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: cannot find number before '{Separator.RuleExtend}'. Make sure it has a '{Separator.RuleInside}' before.");
@@ -80,7 +87,13 @@ public class AgentLoader
                 if (!int.TryParse(split[1], out right))
                     throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: cannot find number after '{Separator.RuleSimple}'.");
 
-                neighbourRules.Add((line.StartsWith(RuleType.NeighbourMIN), cut, neigh, left, right));
+                Rule rule = Rule.AtLeast;
+                if (line.StartsWith(RuleType.NeighbourIS))
+                    rule = Rule.IsExact;
+                else if (line.StartsWith(RuleType.NeighbourMAX))
+                    rule = Rule.AtMost;
+
+                neighbourRules.Add((rule, cut, neigh, left, right));
             }
             else
                 throw new ApplicationException($"Error when loading agent on line {Indexes.Rules + i + 1}: unknown line start.");
@@ -100,7 +113,7 @@ public class AgentLoader
             neighbourRulesBuilder.AppendLine("neighbours[4] = -420; var counts = neighbours.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());");
             foreach (var rule in neighbourRules)
                 neighbourRulesBuilder.AppendLine(
-                    $"if (State == {rule.from} && counts.ContainsKey({rule.neigh}) && counts[{rule.neigh}] {(rule.isMin ? ">=" : "<=")} {rule.cut}) {{ return {rule.to}; }}");
+                    $"if (State == {rule.from} && counts.ContainsKey({rule.neigh}) && counts[{rule.neigh}] {(rule.rule == Rule.AtLeast ? ">=" : rule.rule == Rule.AtMost ? "<=" : "==")} {rule.cut}) {{ return {rule.to}; }}");
         }
 
         // ===== PUTTING IT TOGETHER =====

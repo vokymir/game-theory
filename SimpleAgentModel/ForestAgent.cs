@@ -1,4 +1,5 @@
 namespace SimpleAgentModel;
+using System.Linq;
 
 public class ForestAgent : Agent
 {
@@ -9,8 +10,9 @@ public class ForestAgent : Agent
         if (State == 1) // burned
             return 0;
 
-        foreach (var neighbour in neighbours)
-            if (neighbour == 1) return 1; // catch on fire
+        var counts = neighbours.GroupBy(x => x).ToDictionary(g => g.Key, g => g.Count());
+
+        if (counts.ContainsKey(1) && counts[1] >= 1) { return 1; } // catch on fire
 
         return 2; // not burning
     }

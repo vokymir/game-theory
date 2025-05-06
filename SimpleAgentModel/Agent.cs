@@ -18,6 +18,11 @@ public class Agent
 
     virtual protected void FillPossibleStates()
     {
-        PossibleStates = [0, 1, 2];
+        PossibleStates = [0, 1, 2, 3, 4, 5, 6, 7];
+    }
+
+    public int[] GetPossibleStates()
+    {
+        return PossibleStates;
     }
 }

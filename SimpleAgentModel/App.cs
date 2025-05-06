@@ -9,9 +9,9 @@ public class App
             AnsiHelper.Enable();
 
 
-        var model = new Model(30, 5, "./Agents/Forest.agent");
+        var model = new Model(50, 15, "./Agents/Forest.agent");
 
-        model.RandomizeGrid(ForestAgent.PossibleStates);
+        model.Randomize();
         model.Draw();
 
         while (true)

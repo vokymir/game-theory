@@ -11,17 +11,24 @@ public class Model
     public Agent[,] Agents { get; set; }
     private Random _rnd = new Random();
     protected Agent ExemplarAgene = new();
-    protected AgentLoader Loader;
+    protected AgentLoader AgentGenerator;
 
     public Model(int x, int y, string path)
     {
-        Loader = new AgentLoader() { Path = path };
+        AgentGenerator = new AgentLoader() { Path = path };
         Agents = new Agent[x, y];
-        Loader.Load();
     }
 
-    public void RandomizeGrid(int[] possibleStates)
+    public Model(int x, int y, Type t)
     {
+        AgentGenerator = new AgentLoader(t);
+        Agents = new Agent[x, y];
+    }
+
+    public void Randomize()
+    {
+        int[] possibleStates = AgentGenerator.Create().GetPossibleStates();
+
         for (int x = 0; x < Agents.GetLength(0); x++)
         {
             for (int y = 0; y < Agents.GetLength(1); y++)
@@ -29,7 +36,7 @@ public class Model
                 var agent = Agents[x, y];
                 if (agent is null)
                 {
-                    agent = Loader.Create();
+                    agent = AgentGenerator.Create();
                     Agents[x, y] = agent;
                 }
                 agent.State = possibleStates[_rnd.Next(possibleStates.Length)];
@@ -61,7 +68,7 @@ public class Model
         }
     }
 
-    public int[] GetNeighbours(int x, int y)
+    private int[] GetNeighbours(int x, int y)
     {
         int[] neighbours = new int[9];
 
@@ -92,7 +99,7 @@ public class Model
             DrawWithNumbers();
     }
 
-    public void DrawWithColors()
+    private void DrawWithColors()
     {
         string output = "";
 
@@ -104,11 +111,11 @@ public class Model
                 string add;
                 if (agent is null)
                 {
-                    add = State2Color.Reset() + "X";
+                    add = State2Color.Reset() + "XX";
                 }
                 else
                 {
-                    add = State2Color.Background(agent.State) + " " + State2Color.Reset();
+                    add = State2Color.Background(agent.State) + "  " + State2Color.Reset();
                 }
 
                 output += add;
@@ -123,7 +130,7 @@ public class Model
         Console.WriteLine(output);
     }
 
-    public void DrawWithNumbers()
+    private void DrawWithNumbers()
     {
         string output = "";
 

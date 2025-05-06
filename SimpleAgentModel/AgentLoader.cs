@@ -6,6 +6,10 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
+/// <summary>
+/// Loads Agent from file.
+/// Creates new instances of that agent.
+/// </summary>
 public class AgentLoader
 {
     public string Path { get; init; } = string.Empty;

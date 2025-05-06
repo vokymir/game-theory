@@ -6,13 +6,6 @@ using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-public enum Rule
-{
-    IsExact,
-    AtLeast,
-    AtMost
-}
-
 /// <summary>
 /// Loads Agent from file.
 /// Creates new instances of that agent.

@@ -215,6 +215,12 @@ Agent counts at the end:
         Console.WriteLine(output);
     }
 
+    public void GetAllModelInfo()
+    {
+        var counts = CountAgentsByState();
+        int rounds = Iteration;
+    }
+
     private Dictionary<int, int> CountAgentsByState()
     {
         var counts = new Dictionary<int, int>();

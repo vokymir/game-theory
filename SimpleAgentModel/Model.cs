@@ -202,17 +202,17 @@ public class Model
         Console.WriteLine(output);
     }
 
-    public void WriteAllModelInfo()
+    public static void WriteAllModelInfo(ModelRunInfo info)
     {
-        var counts = CountAgentsByState();
         var build = new StringBuilder();
-        foreach (int state in PossibleStates)
-            build.AppendLine($"{State2Color.Background(state)}State {state}{State2Color.Reset()}:\t{counts[state]}");
+        foreach (int state in info.PossibleStates)
+            build.AppendLine($"{State2Color.Background(state)}State {state}{State2Color.Reset()}:\t{info.FinalOccurrences[state]}");
 
         string output = $@"
-Dimensions: {Agents.GetLength(0)}x{Agents.GetLength(1)}
+Dimensions: {info.Dimensions.X}x{info.Dimensions.Y}
 Agent counts at the end:
 {build.ToString()}";
+
         Console.WriteLine(output);
     }
 
@@ -220,11 +220,17 @@ Agent counts at the end:
     {
         var counts = CountAgentsByState();
         int rounds = Iteration;
-
-        ModelRunInfo info = new() { Iterations = rounds, FinalOccurrences = counts };
-
         var changes = History.ChangesCount();
-        info.Ended = changes[changes.Length - 1] == 0;
+
+        ModelRunInfo info = new()
+        {
+            Iterations = rounds,
+            FinalOccurrences = counts,
+            Dimensions = (Agents.GetLength(0), Agents.GetLength(1)),
+            PossibleStates = PossibleStates,
+            History = History,
+            EndedNaturally = changes[changes.Length - 1] == 0
+        };
 
         return info;
     }

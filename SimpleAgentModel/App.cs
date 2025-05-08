@@ -19,9 +19,9 @@ public class App
         }
         else
         {
-            var model = RunModel(data);
-            model.WriteAllModelInfo();
-            model.History.PrintHistory();
+            var modelRunInfo = RunModel(data);
+            Model.WriteAllModelInfo(modelRunInfo);
+            modelRunInfo.History.PrintHistory();
         }
     }
 
@@ -143,7 +143,7 @@ Available parameters:
         return res;
     }
 
-    public static void RunModels(ArgsInfo data)
+    public static ModelRunInfo[] RunModels(ArgsInfo data)
     {
         ModelRunInfo[] infos = new ModelRunInfo[data.RunsCount];
 
@@ -154,17 +154,18 @@ Available parameters:
 
         for (int i = 0; i < data.RunsCount; i++)
         {
-            var model = RunModel(runData);
-            infos[i] = model.GetAllModelInfo();
+            infos[i] = RunModel(runData);
 
             Console.CursorLeft = 0;
             if (i > 0)
                 Console.CursorTop = Console.CursorTop - 1;
             Console.WriteLine($"Processing {i + 1}/{data.RunsCount} simulations.");
         }
+
+        return infos;
     }
 
-    public static Model RunModel(ArgsInfo data)
+    public static ModelRunInfo RunModel(ArgsInfo data)
     {
         var model = new Model(data.X, data.Y, data.Path);
         int skipIterations = 0;
@@ -209,6 +210,6 @@ Or write 'e' to exit the simulation (e.g. if you think it's infinite).
             skipIterations--;
         }
 
-        return model;
+        return model.GetAllModelInfo();
     }
 }

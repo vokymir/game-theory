@@ -172,6 +172,7 @@ Available parameters:
             Console.WriteLine(@"
 Hit enter to continue to the next iteration.
 Instead write 's<int>' to skip <int> iterations.
+Or write 'e' to exit the simulation (e.g. if you think it's infinite).
 ");
 
         model.Randomize();
@@ -187,10 +188,17 @@ Instead write 's<int>' to skip <int> iterations.
             if (data.Draw && skipIterations <= 0)
             {
                 inp = Console.ReadLine();
-                if (inp is not null && inp.StartsWith("s"))
+                if (inp is not null)
                 {
-                    int.TryParse(inp.Substring(1), out int count);
-                    skipIterations = count;
+                    if (inp.StartsWith("s"))
+                    {
+                        int.TryParse(inp.Substring(1), out int count);
+                        skipIterations = count;
+                    }
+                    else if (inp.StartsWith('e'))
+                    {
+                        model.ShouldEnd = true;
+                    }
                 }
             }
 

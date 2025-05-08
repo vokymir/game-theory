@@ -12,7 +12,7 @@ public class Model
     private Random _rnd = new Random();
     protected Agent ExemplarAgent = new();
     protected AgentLoader AgentGenerator;
-    public bool ShouldEnd { get; private set; } = false;
+    public bool ShouldEnd { get; set; } = false;
     public int Iteration { get; private set; } = 0;
     public int[] PossibleStates { get => ExemplarAgent.GetPossibleStates(); }
     public IModelHistory History = new ModelHistory();
@@ -196,7 +196,8 @@ public class Model
 
     private void WriteInfo()
     {
-        string output = $"{State2Color.Background(0)}Iteration: {Iteration}";
+        var changesCount = History.ChangesCount();
+        string output = $"{State2Color.Reset()}Iteration: {Iteration}\nSimulation ended naturally: {changesCount[changesCount.Length - 1] == 0}";
 
         Console.WriteLine(output);
     }
@@ -206,7 +207,7 @@ public class Model
         var counts = CountAgentsByState();
         var build = new StringBuilder();
         foreach (int state in PossibleStates)
-            build.AppendLine($"{State2Color.Background(state)}State{State2Color.Reset()} {state}\t{counts[state]}");
+            build.AppendLine($"{State2Color.Background(state)}State {state}{State2Color.Reset()}:\t{counts[state]}");
 
         string output = $@"
 Dimensions: {Agents.GetLength(0)}x{Agents.GetLength(1)}

@@ -79,13 +79,18 @@ public class ModelHistory : IModelHistory
 
         for (int i = 0; i < _history.Count; i++)
         {
-            var arr = _history[i];
-            int changesCount = 0;
-            foreach (int stateChanges in arr)
-                if (stateChanges > 0) changesCount += stateChanges;
-
-            _changesCount[i] = changesCount;
+            _changesCount[i] = CountChangesInRound(i);
         }
+    }
+
+    private int CountChangesInRound(int round)
+    {
+        var arr = _history[round];
+        int changesCount = 0;
+        foreach (int stateChanges in arr)
+            if (stateChanges > 0) changesCount += stateChanges;
+
+        return changesCount;
     }
 
     private void AddRound()

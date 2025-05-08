@@ -197,7 +197,7 @@ public class Model
     private void WriteInfo()
     {
         var changesCount = History.ChangesCount();
-        string output = $"{State2Color.Reset()}Iteration: {Iteration}\nSimulation ended naturally: {changesCount[changesCount.Length - 1] == 0}";
+        string output = $"{State2Color.Reset()}Iteration: {Iteration}";
 
         Console.WriteLine(output);
     }
@@ -253,7 +253,8 @@ public class Model
         string output = $@"
 Dimensions: {info.Dimensions.X}x{info.Dimensions.Y}
 Agent counts at the end:
-{build.ToString()}";
+{build.ToString()}
+Simulation ended naturally: {info.History.ChangesCount()[info.History.ChangesCount().Length - 1] == 0}";
 
         Console.WriteLine(output);
     }
@@ -283,7 +284,7 @@ Agent counts at the end:
         sb.AppendLine("State\tSum\tAvg\tMed");
 
         foreach (var endState in endStates.Keys)
-            sb.AppendLine($"{endState}\t{endStates[endState].Sum().ToString()}\t{endStates[endState].Average().ToString("0.00")}\t{endStates[endState][simulationsCount / 2]}");
+            sb.AppendLine($"{State2Color.Foreground(endState)}{endState}{State2Color.Reset()}\t{endStates[endState].Sum().ToString()}\t{endStates[endState].Average().ToString("0.00")}\t{endStates[endState][simulationsCount / 2]}");
         sb.AppendLine($"Ended naturally: {endedNaturally}\nWhich is {(endedNaturally / (float)simulationsCount * 100).ToString("0.00")}%");
 
         Console.WriteLine(sb.ToString());

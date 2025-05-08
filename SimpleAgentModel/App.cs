@@ -15,7 +15,8 @@ public class App
 
         if (data.MultipleRun)
         {
-            RunModels(data);
+            var modelRunsInfo = RunModels(data);
+            Model.WriteAllModelsInfo(modelRunsInfo);
         }
         else
         {
@@ -59,7 +60,15 @@ Available parameters:
 
     public static ArgsInfo ParseArgs(string[] args)
     {
-        ArgsInfo res = new() { MultipleRun = false, StartLine = false, Draw = true, DrawColors = true, DrawOver = false, ShouldContinue = true };
+        ArgsInfo res = new()
+        {
+            MultipleRun = false,
+            StartLine = false,
+            Draw = true,
+            DrawColors = true,
+            DrawOver = false,
+            ShouldContinue = true
+        };
 
         if (args.Length <= 0)
             args = ["h"];
@@ -183,9 +192,14 @@ Or write 'e' to exit the simulation (e.g. if you think it's infinite).
             model.Draw();
 
         string? inp;
+        int iteration = 0;
 
         while (!model.ShouldEnd)
         {
+            if (data.MultipleRun && data.MultipleRunsLimit < iteration)
+            {
+                model.ShouldEnd = true;
+            }
             if (data.Draw && skipIterations <= 0)
             {
                 inp = Console.ReadLine();
@@ -208,6 +222,7 @@ Or write 'e' to exit the simulation (e.g. if you think it's infinite).
                 model.Draw(data.DrawColors, !data.DrawOver);
 
             skipIterations--;
+            iteration++;
         }
 
         return model.GetAllModelInfo();

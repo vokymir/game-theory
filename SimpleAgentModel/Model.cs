@@ -202,20 +202,6 @@ public class Model
         Console.WriteLine(output);
     }
 
-    public static void WriteAllModelInfo(ModelRunInfo info)
-    {
-        var build = new StringBuilder();
-        foreach (int state in info.PossibleStates)
-            build.AppendLine($"{State2Color.Background(state)}State {state}{State2Color.Reset()}:\t{info.FinalOccurrences[state]}");
-
-        string output = $@"
-Dimensions: {info.Dimensions.X}x{info.Dimensions.Y}
-Agent counts at the end:
-{build.ToString()}";
-
-        Console.WriteLine(output);
-    }
-
     public ModelRunInfo GetAllModelInfo()
     {
         var counts = CountAgentsByState();
@@ -256,5 +242,50 @@ Agent counts at the end:
         }
 
         return counts;
+    }
+
+    public static void WriteAllModelInfo(ModelRunInfo info)
+    {
+        var build = new StringBuilder();
+        foreach (int state in info.PossibleStates)
+            build.AppendLine($"{State2Color.Background(state)}State {state}{State2Color.Reset()}:\t{info.FinalOccurrences[state]}");
+
+        string output = $@"
+Dimensions: {info.Dimensions.X}x{info.Dimensions.Y}
+Agent counts at the end:
+{build.ToString()}";
+
+        Console.WriteLine(output);
+    }
+
+    public static void WriteAllModelsInfo(ModelRunInfo[] infos)
+    {
+        int simulationsCount = infos.Length;
+        int[] possibleStates = infos[0].PossibleStates;
+        var endedNaturally = infos.Sum((ModelRunInfo m) => m.EndedNaturally == true ? 1 : 0);
+        Dictionary<int, int[]> endStates = new();
+        StringBuilder sb = new();
+
+        for (int i = 0; i < simulationsCount; i++)
+        {
+            var info = infos[i];
+            foreach (var stateKey in info.FinalOccurrences.Keys)
+            {
+                if (!endStates.ContainsKey(stateKey))
+                    endStates[stateKey] = new int[simulationsCount];
+                endStates[stateKey][i] += info.FinalOccurrences[stateKey];
+            }
+        }
+
+
+        sb.AppendLine($"Simulations run: {simulationsCount}");
+        sb.AppendLine("How many states were 'alive' at the end.");
+        sb.AppendLine("State\tSum\tAvg\tMed");
+
+        foreach (var endState in endStates.Keys)
+            sb.AppendLine($"{endState}\t{endStates[endState].Sum().ToString()}\t{endStates[endState].Average().ToString("0.00")}\t{endStates[endState][simulationsCount / 2]}");
+        sb.AppendLine($"Ended naturally: {endedNaturally}\nWhich is {(endedNaturally / (float)simulationsCount * 100).ToString("0.00")}%");
+
+        Console.WriteLine(sb.ToString());
     }
 }

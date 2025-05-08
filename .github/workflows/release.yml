@@ -1,0 +1,73 @@
+name: Build & Publish Desktop Binaries
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        runtime:
+          - win-x64
+          - linux-x64
+          - osx-x64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Publish for ${{ matrix.runtime }}
+        run: |
+          dotnet publish --configuration Release \
+            --runtime ${{ matrix.runtime }} \
+            --self-contained true \
+            -o ./publish/${{ matrix.runtime }}
+
+      - name: Zip ${{ matrix.runtime }} build
+        run: |
+          cd publish/${{ matrix.runtime }}
+          zip -r ../../../artifacts-${{ matrix.runtime }}.zip .
+
+    # after all matrix builds finish, create/upload the GitHub Release
+  release:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifact zips
+        uses: actions/download-artifact@v3
+        with:
+          path: ./all-zips
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload assets
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          asset_path: ./all-zips
+          asset_name: |
+            myapp-${{ github.ref_name }}-win-x64.zip
+            myapp-${{ github.ref_name }}-linux-x64.zip
+            myapp-${{ github.ref_name }}-osx-x64.zip
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

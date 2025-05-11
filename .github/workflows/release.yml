@@ -40,48 +40,42 @@ jobs:
       - name: Zip ${{ matrix.runtime }} build
         run: |
           cd publish/${{ matrix.runtime }}
-          zip -r ../../../${{ matrix.runtime }}-program.zip .
+          zip -r ../../../artifacts-${{ matrix.runtime }}.zip .
 
       - name: Upload artifact for ${{ matrix.runtime }}
         uses: actions/upload-artifact@v4
         with:
           name: binaries-${{ matrix.runtime }}
-          path: ${{ matrix.runtime }}-program.zip
+          path: artifacts-${{ matrix.runtime }}.zip
 
   release:
     needs: build-and-publish
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        runtime:
-          - win-x64
-          - linux-x64
-          - osx-x64
 
     steps:
-      - name: Download the specific runtime zip
+      - name: Download all runtime zips
         uses: actions/download-artifact@v4
         with:
-          name: binaries-${{ matrix.runtime }}
           path: ./artifacts
 
       - name: Create GitHub Release
-        if: matrix.runtime == 'win-x64'
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
-          name:        ${{ github.ref_name }}           # release title = tag
-          body:        Automated build for ${{ github.ref_name }} by ${{ github.actor }}.
+          body: Automated build for ${{ github.ref_name }} by ${{ github.actor }}.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Release asset for ${{ matrix.runtime }}
+      - name: Upload Release assets
         uses: softprops/action-gh-release@v1
         with:
-          tag_name:           ${{ github.ref_name }}
-          asset_path:         ./artifacts/${{ matrix.runtime }}-program.zip
-          asset_name:         ${{ matrix.runtime }}-program.zip
+          tag_name: ${{ github.ref_name }}
+          asset_path: ./artifacts
+          asset_name: |
+            ${{ github.event.repository.name }}-${{ github.ref_name }}-win-x64.zip
+            ${{ github.event.repository.name }}-${{ github.ref_name }}-linux-x64.zip
+            ${{ github.event.repository.name }}-${{ github.ref_name }}-osx-x64.zip
           asset_content_type: application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

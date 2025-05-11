@@ -6,9 +6,8 @@ on:
       - 'v*.*.*'
 
 jobs:
-  build-and-release:
+  build-and-publish:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         runtime:
@@ -40,16 +39,21 @@ jobs:
           cd publish/${{ matrix.runtime }}
           zip -r ../../../artifacts-${{ matrix.runtime }}.zip .
 
-    # after all matrix builds finish, create/upload the GitHub Release
+      - name: Upload artifact for ${{ matrix.runtime }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-${{ matrix.runtime }}
+          path: artifacts-${{ matrix.runtime }}.zip
+
   release:
-    needs: build-and-release
+    needs: build-and-publish
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download all artifact zips
-        uses: actions/download-artifact@v3
+      - name: Download all runtime zips
+        uses: actions/download-artifact@v4
         with:
-          path: ./all-zips
+          path: ./artifacts
 
       - name: Create GitHub Release
         id: create_release
@@ -59,11 +63,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload assets
+      - name: Upload Release assets
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}
-          asset_path: ./all-zips
+          asset_path: ./artifacts
           asset_name: |
             myapp-${{ github.ref_name }}-win-x64.zip
             myapp-${{ github.ref_name }}-linux-x64.zip

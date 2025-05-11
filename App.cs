@@ -5,6 +5,22 @@ public class App
 {
     public static void Main(string[] args)
     {
+        try
+        {
+            TrueMain(args);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Program failed, with error: {e.Message}");
+        }
+        finally
+        {
+            Console.WriteLine("Thank you for using this program.");
+        }
+    }
+
+    public static void TrueMain(string[] args)
+    {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             AnsiHelper.Enable();
 

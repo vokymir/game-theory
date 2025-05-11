@@ -37,16 +37,19 @@ jobs:
             --self-contained true \
             -o ./publish/${{ matrix.runtime }}
 
+      - name: Prepare artifacts folder
+        run: mkdir -p artifacts
+
       - name: Zip ${{ matrix.runtime }} build
         run: |
           cd publish/${{ matrix.runtime }}
-          zip -r ../../../artifacts-${{ matrix.runtime }}.zip .
+          zip -r ../../../artifacts/artifacts-${{ matrix.runtime }}.zip .
 
-      - name: Upload artifact for ${{ matrix.runtime }}
+      - name: Upload intermediate artifact
         uses: actions/upload-artifact@v4
         with:
-          name: binaries-${{ matrix.runtime }}
-          path: artifacts-${{ matrix.runtime }}.zip
+          name: runtime-${{ matrix.runtime }}
+          path: artifacts/artifacts-${{ matrix.runtime }}.zip
 
   release:
     needs: build-and-publish
@@ -64,18 +67,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           body: Automated build for ${{ github.ref_name }} by ${{ github.actor }}.
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Release assets
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ github.ref_name }}
-          asset_path: ./artifacts
-          asset_name: |
-            ${{ github.event.repository.name }}-${{ github.ref_name }}-win-x64.zip
-            ${{ github.event.repository.name }}-${{ github.ref_name }}-linux-x64.zip
-            ${{ github.event.repository.name }}-${{ github.ref_name }}-osx-x64.zip
-          asset_content_type: application/zip
+          files: |
+            ./artifacts/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

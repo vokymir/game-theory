@@ -6,7 +6,7 @@ on:
       - 'v*'  # e.g. v1.0.0, v1.0.6, …
 
 env:
-  PROJECT_NAME: MyApp   # ← change this to the name used by your csproj output
+  PROJECT_NAME: Simple Agent Model
 
 jobs:
   build:

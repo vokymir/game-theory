@@ -3,11 +3,14 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*'  # Triggers on version tags like v1.0.0
+      - 'v*'  # e.g. v1.0.0, v1.0.6, …
+
+env:
+  PROJECT_NAME: MyApp   # ← change this to the name used by your csproj output
 
 jobs:
   build:
-    name: Build and Publish Binaries
+    name: Build, Rename & Publish Binaries
     runs-on: ubuntu-latest
 
     strategy:
@@ -23,7 +26,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Publish for ${{ matrix.os }}
+      - name: Publish single-file build for ${{ matrix.os }}
         run: |
           dotnet publish -c Release -r ${{ matrix.os }} \
             -p:PublishSingleFile=true \
@@ -32,24 +35,42 @@ jobs:
             --self-contained true \
             -o ./publish/${{ matrix.os }}
 
-      - name: Upload artifact
+      - name: Rename executables & PDBs to include RID
+        shell: bash
+        run: |
+          dst="./publish/${{ matrix.os }}"
+          base="${{ env.PROJECT_NAME }}-${{ matrix.os }}"
+
+          # 1) Rename the single-file executable:
+          if [[ "${{ matrix.os }}" == "win-x64" ]]; then
+            mv "$dst/${{ env.PROJECT_NAME }}.exe" "$dst/${base}.exe"
+          else
+            mv "$dst/${{ env.PROJECT_NAME }}" "$dst/${base}"
+          fi
+
+          # 2) Rename any PDB(s):
+          for pdb in "$dst"/${{ env.PROJECT_NAME }}*.pdb; do
+            mv "$pdb" "${pdb%.*}-${{ matrix.os }}.pdb"
+          done
+
+      - name: Upload renamed artifacts
         uses: actions/upload-artifact@v4
         with:
           name: binaries-${{ matrix.os }}
           path: ./publish/${{ matrix.os }}
 
   release:
-    name: Create GitHub Release
+    name: Create GitHub Release & Attach Assets
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download all artifacts
+      - name: Download all platform artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
 
-      - name: Display downloaded files
+      - name: List files to be released
         run: ls -R ./artifacts
 
       - name: Create GitHub Release
@@ -63,6 +84,5 @@ jobs:
             artifacts/binaries-win-x64/*
             artifacts/binaries-linux-x64/*
             artifacts/binaries-osx-x64/*
-
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

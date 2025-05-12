@@ -83,7 +83,8 @@ Available parameters:
             Draw = true,
             DrawColors = true,
             DrawOver = false,
-            ShouldContinue = true
+            ShouldContinue = true,
+            Path = string.Empty
         };
 
         if (args.Length <= 0)
@@ -160,6 +161,8 @@ Available parameters:
 
         if (res.Path == string.Empty)
             throw new ApplicationException($"You must enter a path to agent. Enetered: {res.Path}");
+        else
+            Console.WriteLine($"THE PATH IS: {res.Path}");
         if (res.X <= 0 || res.Y <= 0)
             throw new ApplicationException($"Map dimension must be greater than 0. Dimension: {res.X}x{res.Y}");
         if (res.MultipleRun && res.RunsCount <= 0)

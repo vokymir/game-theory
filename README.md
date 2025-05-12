@@ -9,5 +9,7 @@
 When you run the program without any argument, it will describe possibilities.
 
 ```bash
-> SimpleAgentModel ...
+> SimpleAgentModel-{os} {args}
 ```
+
+Tested on Linux.

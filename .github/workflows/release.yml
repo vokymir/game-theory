@@ -6,7 +6,7 @@ on:
       - 'v*'  # e.g. v1.0.0, v1.0.6, …
 
 env:
-  PROJECT_NAME: Simple Agent Model
+  PROJECT_NAME: SimpleAgentModel
 
 jobs:
   build:

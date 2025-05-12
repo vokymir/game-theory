@@ -4,7 +4,15 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+  <!-- produce a single EXE -->
+  <PublishSingleFile>true</PublishSingleFile>
+  <!-- make it self-contained (include the runtime) -->
+  <SelfContained>true</SelfContained>
+  <!-- force all files (including managed assemblies) to be extracted at launch -->
+  <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+  <!-- optional: trim unused assemblies to reduce size -->
+    <PublishTrimmed>false</PublishTrimmed>
+      <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

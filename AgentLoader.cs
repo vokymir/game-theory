@@ -150,19 +150,15 @@ namespace SimpleAgentModel
         var syntaxTree = CSharpSyntaxTree.ParseText(classSource);
 
         // load the assemblies
-        var coreLib = typeof(object).Assembly;            // System.Private.CoreLib.dll
-        var agentLib = typeof(Agent).Assembly;             // Agent class
-        var collectionsLib = Assembly.Load(new AssemblyName("System.Collections"));
-        var linqLib = Assembly.Load(new AssemblyName("System.Linq"));
-        var systemRuntime = Assembly.Load(new AssemblyName("System.Runtime"));
+        string baseDir = AppContext.BaseDirectory;
 
         var refs = new[]
         {
-        MetadataReference.CreateFromFile(coreLib.Location),
-        MetadataReference.CreateFromFile(agentLib.Location),
-        MetadataReference.CreateFromFile(collectionsLib.Location),
-        MetadataReference.CreateFromFile(linqLib.Location),
-        MetadataReference.CreateFromFile(systemRuntime.Location),
+        MetadataReference.CreateFromFile(System.IO.Path.Combine(baseDir, "System.Private.CoreLib.dll")),
+        MetadataReference.CreateFromFile(System.IO.Path.Combine(baseDir, "SimpleAgentModel.dll")),
+        MetadataReference.CreateFromFile(System.IO.Path.Combine(baseDir, "System.Collections.dll")),
+        MetadataReference.CreateFromFile(System.IO.Path.Combine(baseDir, "System.Linq.dll")),
+        MetadataReference.CreateFromFile(System.IO.Path.Combine(baseDir, "System.Runtime.dll")),
         };
 
         var compilation = CSharpCompilation.Create(
@@ -193,7 +189,11 @@ namespace SimpleAgentModel
     public Agent Create()
     {
         if (AgentType is null)
+        {
+            if (Path == string.Empty)
+                throw new ApplicationException("The path to agent must not be an empty string.");
             Load();
+        }
 
         return (Agent)(Activator.CreateInstance(AgentType!)
             ?? throw new ApplicationException($"Cannot instantiate agent {AgentType}."));

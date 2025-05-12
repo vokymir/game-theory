@@ -11,7 +11,7 @@ public class App
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Program failed with error: {e.Message}\n\n{e.ToString()}\n\n{e.Source}\n\n{e.StackTrace}\n\n");
+            Console.WriteLine($"Program failed with error: {e.Message}");
         }
         finally
         {
@@ -160,9 +160,7 @@ Available parameters:
         }
 
         if (res.Path == string.Empty)
-            throw new ApplicationException($"You must enter a path to agent. Enetered: {res.Path}");
-        else
-            Console.WriteLine($"THE PATH IS: {res.Path}");
+            throw new ApplicationException($"You must enter a path to agent. Entered: {res.Path}");
         if (res.X <= 0 || res.Y <= 0)
             throw new ApplicationException($"Map dimension must be greater than 0. Dimension: {res.X}x{res.Y}");
         if (res.MultipleRun && res.RunsCount <= 0)

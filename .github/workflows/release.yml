@@ -38,19 +38,35 @@ jobs:
       - name: Rename executables & PDBs to include RID
         shell: bash
         run: |
-          dst="./publish/${{ matrix.os }}"
-          base="${{ env.PROJECT_NAME }}-${{ matrix.os }}"
+          set -e
+          dst="publish/${{ matrix.os }}"
+          rid="${{ matrix.os }}"
+          base="${{ env.PROJECT_NAME }}-${rid}"
 
-          # 1) Rename the single-file executable:
-          if [[ "${{ matrix.os }}" == "win-x64" ]]; then
-            mv "$dst/${{ env.PROJECT_NAME }}.exe" "$dst/${base}.exe"
-          else
-            mv "$dst/${{ env.PROJECT_NAME }}" "$dst/${base}"
+          echo "Looking in $dst for the single-file executable…"
+          # 1) Find the single-file (non‐.pdb) file:
+          exe="$(find "$dst" -maxdepth 1 -type f ! -name '*.pdb' | head -n1)"
+          if [[ -z "$exe" ]]; then
+            echo "❌ No executable found in $dst"
+            exit 1
           fi
 
-          # 2) Rename any PDB(s):
-          for pdb in "$dst"/${{ env.PROJECT_NAME }}*.pdb; do
-            mv "$pdb" "${pdb%.*}-${{ matrix.os }}.pdb"
+          # 2) Build the new name:
+          if [[ "$exe" == *.exe ]]; then
+            newexe="$dst/${base}.exe"
+          else
+            newexe="$dst/${base}"
+          fi
+
+          echo "Renaming $(basename "$exe") → $(basename "$newexe")"
+          mv "$exe" "$newexe"
+
+          # 3) Rename any PDB(s):
+          for pdb in "$dst"/*.pdb; do
+            if [[ -f "$pdb" ]]; then
+              echo "Renaming $(basename "$pdb") → ${base}.pdb"
+              mv "$pdb" "$dst/${base}.pdb"
+            fi
           done
 
       - name: Upload renamed artifacts

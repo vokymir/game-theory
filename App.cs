@@ -11,7 +11,7 @@ public class App
         }
         catch (Exception e)
         {
-            Console.WriteLine($"Program failed, with error: {e.Message}");
+            Console.WriteLine($"Program failed with error: {e.Message}\n\n{e.ToString()}\n\n{e.Source}\n\n{e.StackTrace}\n\n");
         }
         finally
         {

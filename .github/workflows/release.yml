@@ -35,13 +35,6 @@ jobs:
             --self-contained true \
             -o ./publish/${{ matrix.os }}
 
-      - name: Copy Agents folder into publish bundle
-        run: |
-          # ensure destination exists
-          mkdir -p publish/${{ matrix.os }}/Agents
-          # copy over your Agents folder (adjust path if needed)
-          cp -R Agents/. publish/${{ matrix.os }}/Agents/
-
       - name: Rename executable & strip out PDBs
         shell: bash
         run: |
@@ -70,7 +63,7 @@ jobs:
           # remove any leftover PDBs
           rm -f "$dst"/*.pdb
 
-      - name: Upload renamed executables (including Agents/)
+      - name: Upload renamed executables
         uses: actions/upload-artifact@v4
         with:
           name: binaries-${{ matrix.os }}

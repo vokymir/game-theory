@@ -35,7 +35,7 @@ jobs:
             --self-contained true \
             -o ./publish/${{ matrix.os }}
 
-      - name: Rename executables & PDBs to include RID
+      - name: Rename executable & strip out PDBs
         shell: bash
         run: |
           set -e
@@ -44,14 +44,13 @@ jobs:
           base="${{ env.PROJECT_NAME }}-${rid}"
 
           echo "Looking in $dst for the single-file executable…"
-          # 1) Find the single-file (non‐.pdb) file:
           exe="$(find "$dst" -maxdepth 1 -type f ! -name '*.pdb' | head -n1)"
           if [[ -z "$exe" ]]; then
             echo "❌ No executable found in $dst"
             exit 1
           fi
 
-          # 2) Build the new name:
+          # compute new name (with .exe on Windows)
           if [[ "$exe" == *.exe ]]; then
             newexe="$dst/${base}.exe"
           else
@@ -61,15 +60,10 @@ jobs:
           echo "Renaming $(basename "$exe") → $(basename "$newexe")"
           mv "$exe" "$newexe"
 
-          # 3) Rename any PDB(s):
-          for pdb in "$dst"/*.pdb; do
-            if [[ -f "$pdb" ]]; then
-              echo "Renaming $(basename "$pdb") → ${base}.pdb"
-              mv "$pdb" "$dst/${base}.pdb"
-            fi
-          done
+          # remove any leftover PDBs
+          rm -f "$dst"/*.pdb
 
-      - name: Upload renamed artifacts
+      - name: Upload renamed executables
         uses: actions/upload-artifact@v4
         with:
           name: binaries-${{ matrix.os }}

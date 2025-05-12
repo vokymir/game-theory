@@ -1,73 +1,68 @@
-name: Build & Publish Desktop Binaries
+name: Build and Release
 
 on:
   push:
     tags:
-      - 'v*.*.*'
-
-permissions:
-  contents: write
+      - 'v*'  # Triggers on version tags like v1.0.0
 
 jobs:
-  build-and-publish:
+  build:
+    name: Build and Publish Binaries
     runs-on: ubuntu-latest
+
     strategy:
       matrix:
-        runtime:
-          - win-x64
-          - linux-x64
-          - osx-x64
+        os: [win-x64, linux-x64, osx-x64]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup .NET 8 SDK
-        uses: actions/setup-dotnet@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Publish for ${{ matrix.runtime }}
+      - name: Publish for ${{ matrix.os }}
         run: |
-          dotnet publish --configuration Release \
-            --runtime ${{ matrix.runtime }} \
+          dotnet publish -c Release -r ${{ matrix.os }} \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            -p:PublishTrimmed=false \
             --self-contained true \
-            -o ./publish/${{ matrix.runtime }}
+            -o ./publish/${{ matrix.os }}
 
-      - name: Prepare artifacts folder
-        run: mkdir -p artifacts
-
-      - name: Zip ${{ matrix.runtime }} build
-        run: |
-          cd publish/${{ matrix.runtime }}
-          zip -r ../../../artifacts/artifacts-${{ matrix.runtime }}.zip .
-
-      - name: Upload intermediate artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: runtime-${{ matrix.runtime }}
-          path: artifacts/artifacts-${{ matrix.runtime }}.zip
+          name: binaries-${{ matrix.os }}
+          path: ./publish/${{ matrix.os }}
 
   release:
-    needs: build-and-publish
+    name: Create GitHub Release
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download all runtime zips
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
 
+      - name: Display downloaded files
+        run: ls -R ./artifacts
+
       - name: Create GitHub Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          body: Automated build for ${{ github.ref_name }} by ${{ github.actor }}.
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
           files: |
-            ./artifacts/*
+            artifacts/binaries-win-x64/*
+            artifacts/binaries-linux-x64/*
+            artifacts/binaries-osx-x64/*
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

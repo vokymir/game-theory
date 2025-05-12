@@ -4,3 +4,6 @@
 1 -> 0 // if was on fire, now is just black dust
 min 1 : 1 : 2 -> 1 // if at least 1 of type 1 (fire), then if this is 2 (tree), it becomes 1 (fire)
 default: x -> x
+
+RECOMMENDED PARAMETERS
+path:true pathstate:1
